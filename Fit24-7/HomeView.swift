@@ -15,7 +15,7 @@ struct HomeView: View {
     
     var body: some View {
         ScrollView {
-            VStack {
+            VStack(alignment: .leading) {
                 Text("Welcome to Fit24-7")
                     .font(.largeTitle)
                     .padding()
@@ -66,6 +66,32 @@ struct HomeView: View {
                     Spacer()
                 }
                 .padding()
+                
+                HStack {
+                    Text("Fitness Activity")
+                        .font(.title2)
+                    
+                    Spacer ()
+                    
+                    Button {
+                        print("Show More")
+                    } label: {
+                        Text("Show More")
+                            .padding(.all, 10)
+                            .foregroundColor(.white)
+                            .background(.blue)
+                            .cornerRadius(20)
+                    }
+                }
+                .padding(.horizontal)
+                
+                LazyVGrid(columns: Array(repeating: GridItem(spacing: 20), count: 2)) {
+                    ActivityCardView()
+                    ActivityCardView()
+                    ActivityCardView()
+                    ActivityCardView()
+                }
+                .padding(.horizontal)
             }
         }
     }
