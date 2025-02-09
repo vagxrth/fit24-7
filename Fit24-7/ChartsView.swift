@@ -11,7 +11,13 @@ import Charts
 struct DailyStepModel: Identifiable {
     let id = UUID()
     let date: Date
-    let count: Double
+    let count: Int
+}
+
+struct MonthlyStepModel: Identifiable {
+    let id = UUID()
+    let date: Date
+    let count: Int
 }
 
 enum ChartOptions: String, CaseIterable {
@@ -23,7 +29,7 @@ enum ChartOptions: String, CaseIterable {
 }
 
 class ChartsViewModel: ObservableObject {
-    var mockChartData = [
+    var mockWeekChartData = [
         DailyStepModel(date: Date(), count: 6400),
         DailyStepModel(date: Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date(), count: 9740),
         DailyStepModel(date: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date(), count: 6500),
@@ -33,8 +39,28 @@ class ChartsViewModel: ObservableObject {
         DailyStepModel(date: Calendar.current.date(byAdding: .day, value: -6, to: Date()) ?? Date(), count: 3453)
     ]
     
+    var mockMonthChartData = [
+        MonthlyStepModel(date: Date(), count: 6400),
+        MonthlyStepModel(date: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date(), count: 9740),
+        MonthlyStepModel(date: Calendar.current.date(byAdding: .month, value: -2, to: Date()) ?? Date(), count: 6500),
+    ]
+    
+    @Published var oneWeekAverage = 383
+    @Published var oneWeekTotal = 2345
+    
     @Published var mockOneMonthData = [DailyStepModel]()
+    @Published var oneMonthAverage = 0
+    @Published var oneMonthTotal = 0
+
     @Published var mockThreeMonthsData = [DailyStepModel]()
+    @Published var threeMonthAverage = 0
+    @Published var threeMonthTotal = 0
+    
+    @Published var oneYearAverage = 0
+    @Published var oneYearTotal = 0
+
+    @Published var ytdAverage = 0
+    @Published var ytdTotal = 0
     
     init() {
         let mockOneMonth = mockDataForDays(days: 30)
@@ -50,7 +76,7 @@ class ChartsViewModel: ObservableObject {
         for day in 0..<days {
             let currentDate = Calendar.current.date(byAdding: .day, value: -day, to: Date()) ?? Date()
             let randomStepCount = Int.random(in: 3000...12000)
-            let dailyStepData = DailyStepModel(date: currentDate, count: Double(randomStepCount))
+            let dailyStepData = DailyStepModel(date: currentDate, count: randomStepCount)
             
             mockData.append(dailyStepData)
         }
@@ -75,9 +101,40 @@ struct ChartsView: View {
             ZStack {
                 switch selectedChart {
                 case .oneWeek:
-                    Chart {
-                        ForEach(viewModel.mockChartData) {
-                            data in BarMark(x: .value(data.date.formatted(), data.date, unit: .day), y: .value("Steps", data.count))
+                    VStack {
+                        HStack {
+                            Spacer()
+                            
+                            VStack(spacing: 16) {
+                                Text("Average")
+                                    .font(.title2)
+                                Text("\(viewModel.oneWeekAverage)")
+                                    .font(.title3)
+                            }
+                            .frame(width: 90)
+                            .padding()
+                            .background(.gray.opacity(0.1))
+                            .cornerRadius(10)
+                            
+                            Spacer()
+                            
+                            VStack(spacing: 16) {
+                                Text("Total")
+                                    .font(.title2)
+                                Text("\(viewModel.oneWeekTotal)")
+                                    .font(.title3)
+                            }
+                            .frame(width: 90)
+                            .padding()
+                            .background(.gray.opacity(0.1))
+                            .cornerRadius(10)
+                            
+                            Spacer()
+                        }
+                        Chart {
+                            ForEach(viewModel.mockWeekChartData) {
+                                data in BarMark(x: .value(data.date.formatted(), data.date, unit: .day), y: .value("Steps", data.count))
+                            }
                         }
                     }
                 case .oneMonth:
@@ -94,15 +151,19 @@ struct ChartsView: View {
                     }
                 case .oneYear:
                     Chart {
-                        ForEach(viewModel.mockChartData) {
-                            data in BarMark(x: .value(data.date.formatted(), data.date, unit: .day), y: .value("Steps", data.count))
+                        ForEach(viewModel.mockMonthChartData) {
+                            data in BarMark(x: .value(data.date.formatted(), data.date, unit: .month), y: .value("Steps", data.count))
                         }
                     }
                 case .yearToDate:
-                    EmptyView()
+                    Chart {
+                        ForEach(viewModel.mockMonthChartData) {
+                            data in BarMark(x: .value(data.date.formatted(), data.date, unit: .month), y: .value("Steps", data.count))
+                        }
+                    }
                 }
             }
-            .frame(maxHeight: 350)
+            .frame(maxHeight: 400)
             .padding(.horizontal)
             
             HStack {
