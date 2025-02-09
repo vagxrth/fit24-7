@@ -26,8 +26,8 @@ struct FitTabView: View {
                 .tabItem{
                     Image(systemName: "house")
                 }
-            HistoricDataView()
-                .tag("Historic")
+            ChartsView()
+                .tag("Charts")
                 .tabItem{
                     Image(systemName: "chart.line.uptrend.xyaxis")
                 }
