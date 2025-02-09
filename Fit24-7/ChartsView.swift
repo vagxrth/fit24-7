@@ -14,6 +14,14 @@ struct DailyStepModel: Identifiable {
     let count: Double
 }
 
+enum ChartOptions: String, CaseIterable {
+    case oneWeek = "1W"
+    case oneMonth = "1M"
+    case threeMonth = "3M"
+    case oneYear = "1Y"
+    case yearToDate = "YTD"
+}
+
 class ChartsViewModel: ObservableObject {
     var mockChartData = [
         DailyStepModel(date: Date(), count: 6400),
@@ -45,6 +53,18 @@ struct ChartsView: View {
             }
             .frame(maxHeight: 350)
             .padding(.horizontal)
+            
+            HStack {
+                ForEach(ChartOptions.allCases, id: \.rawValue) {
+                    option in Button(option.rawValue) {
+                        print(option)
+                    }
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(.blue)
+                    .cornerRadius(10)
+                }
+            }
             
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
