@@ -32,8 +32,7 @@ class LeaderboardViewModel: ObservableObject {
 struct LeaderboardView: View {
     
     @State var viewModel = LeaderboardViewModel()
-    @AppStorage("username") var username: String?
-    @State var showTerms = true
+    @Binding var showTerms: Bool
     
     var body: some View {
         VStack {
@@ -72,5 +71,5 @@ struct LeaderboardView: View {
 }
 
 #Preview {
-    LeaderboardView()
+    LeaderboardView(showTerms: .constant(false))
 }

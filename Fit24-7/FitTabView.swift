@@ -9,6 +9,9 @@ import SwiftUI
 
 struct FitTabView: View {
     @State var selectedTab = "Home"
+    @AppStorage("username") var username: String?
+    @State var showTerms = true
+
     
     init() {
         let appearance = UITabBarAppearance()
@@ -30,11 +33,14 @@ struct FitTabView: View {
                 .tabItem{
                     Image(systemName: "chart.line.uptrend.xyaxis")
                 }
-            LeaderboardView()
+            LeaderboardView(showTerms: $showTerms)
                 .tag("Leaderboard")
                 .tabItem{
                     Image(systemName: "list.clipboard")
                 }
+        }
+        .onAppear {
+            showTerms = username == nil
         }
     }
 }
