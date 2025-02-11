@@ -32,6 +32,8 @@ class LeaderboardViewModel: ObservableObject {
 struct LeaderboardView: View {
     
     @State var viewModel = LeaderboardViewModel()
+    @AppStorage("username") var username: String?
+    @State var showTerms = true
     
     var body: some View {
         VStack {
@@ -63,6 +65,9 @@ struct LeaderboardView: View {
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
+        .fullScreenCover(isPresented: $showTerms) {
+            TermsView()
+        }
     }
 }
 
