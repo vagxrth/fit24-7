@@ -32,6 +32,7 @@ class LeaderboardViewModel: ObservableObject {
 struct LeaderboardView: View {
     
     @State var viewModel = LeaderboardViewModel()
+    @Binding var showTerms: Bool
     
     var body: some View {
         VStack {
@@ -63,9 +64,12 @@ struct LeaderboardView: View {
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
+        .fullScreenCover(isPresented: $showTerms) {
+            TermsView()
+        }
     }
 }
 
 #Preview {
-    LeaderboardView()
+    LeaderboardView(showTerms: .constant(false))
 }
