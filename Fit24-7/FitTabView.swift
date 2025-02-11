@@ -10,14 +10,13 @@ import SwiftUI
 struct FitTabView: View {
     @State var selectedTab = "Home"
     
-//    init() {
-//        let appearance = UITabBarAppearance()
-//        appearance.configureWithOpaqueBackground()
-//        appearance.stackedLayoutAppearance.selected.iconColor = .green
-//        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.green]
-//        
-//        UITabBar.appearance().scrollEdgeAppearance = appearance
-//    }
+    init() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.blue]
+        
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -30,6 +29,11 @@ struct FitTabView: View {
                 .tag("Charts")
                 .tabItem{
                     Image(systemName: "chart.line.uptrend.xyaxis")
+                }
+            LeaderboardView()
+                .tag("Leaderboard")
+                .tabItem{
+                    Image(systemName: "list.clipboard")
                 }
         }
     }
