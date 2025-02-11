@@ -18,7 +18,7 @@ class DatabaseManager {
     let database = Firestore.firestore()
     
     func fetchLeaderboard() async throws {
-        let snapshot = try await database.collection("users").getDocuments()
+        let snapshot = try await database.collection("-leaderboard").getDocuments()
         
         print(snapshot.documents)
         print(snapshot.documents.first?.data())
