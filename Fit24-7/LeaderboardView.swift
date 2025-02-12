@@ -7,74 +7,10 @@
 
 import SwiftUI
 
-struct LeaderboardUser: Codable, Identifiable {
-    var id = UUID()
-    let username: String
-    let count: Int
-}
-
-class LeaderboardViewModel: ObservableObject {
-    
-    @Published var leaders = [LeaderboardUser]()
-    
-    var mockData = [
-        LeaderboardUser(username: "john", count: 2122),
-        LeaderboardUser(username: "seth", count: 4332),
-        LeaderboardUser(username: "drew", count: 3711),
-        LeaderboardUser(username: "mark", count: 6134),
-        LeaderboardUser(username: "pat", count: 1123),
-        LeaderboardUser(username: "paul", count: 2122),
-        LeaderboardUser(username: "sam", count: 4332),
-        LeaderboardUser(username: "elon", count: 3711),
-        LeaderboardUser(username: "garry", count: 6134),
-        LeaderboardUser(username: "peter", count: 1123)
-    ]
-    
-    init() {
-        Task {
-            do {
-                try await postStepCountUpdateForUser(username: "kevin", count: 1876)
-                let result = try await fetchLeaderboard()
-                DispatchQueue.main.async {
-                    self.leaders = result.top10
-                }
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-    }
-    
-    struct LeaderboardResult {
-        let user: LeaderboardUser?
-        let top10: [LeaderboardUser]
-    }
-    
-    func fetchLeaderboard() async throws -> LeaderboardResult {
-        let leaders = try await DatabaseManager.shared.fetchLeaderboard()
-        let top10 = Array(leaders.sorted(by: {
-            $0.count > $1.count
-        }).prefix(10))
-        let username = UserDefaults.standard.string(forKey: "username")
-        
-        if let username = username {
-            let user = leaders.first(where: {
-                $0.username == username
-            })
-            return LeaderboardResult(user: user, top10: top10)
-
-        } else {
-            return LeaderboardResult(user: nil, top10: top10)
-        }
-    }
-    
-    func postStepCountUpdateForUser(username: String, count: Int) async throws {
-        try await DatabaseManager.shared.postStepCountUpdateForUser(leader: LeaderboardUser(username: username, count: count))
-    }
-}
-
 struct LeaderboardView: View {
     
-    @State var viewModel = LeaderboardViewModel()
+    @AppStorage("username") var username: String?
+    @StateObject var viewModel = LeaderboardViewModel()
     @Binding var showTerms: Bool
     
     var body: some View {
@@ -95,14 +31,32 @@ struct LeaderboardView: View {
             .padding()
             
             LazyVStack(spacing: 24) {
-                ForEach(viewModel.leaders) {
-                    person in HStack {
-                        Text("\(person.id).")
+                ForEach(Array(viewModel.leaderResult.top10.enumerated()), id: \.element.id) {
+                    ( idx, person ) in HStack {
+                        Text("\(idx + 1).")
                         Text(person.username)
+                        if username == person.username {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(.yellow)
+                        }
                         Spacer()
                         Text("\(person.count)")
                     }
                     .padding(.horizontal)
+                }
+            }
+            
+            if let user = viewModel.leaderResult.user {
+                Image(systemName: "ellipsis")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                    .foregroundColor(.gray.opacity(0.5))
+                
+                HStack {
+                    Text(user.username)
+                    Spacer()
+                    Text("\(user.count)")
                 }
             }
         }
@@ -110,13 +64,6 @@ struct LeaderboardView: View {
         .fullScreenCover(isPresented: $showTerms) {
             TermsView()
         }
-//        .task {
-//            do {
-//                try await DatabaseManager.shared.fetchLeaderboard()
-//            } catch {
-//                print(error.localizedDescription)
-//            }
-//        }
     }
 }
 
