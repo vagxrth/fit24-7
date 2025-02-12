@@ -15,7 +15,7 @@ class DatabaseManager {
         
     }
     
-    let database = Firestore.firestore()
+    private let database = Firestore.firestore()
     private let weeklyLeaderboard = "\(Date().mondayDateFormat())-leaderboard"
     
     func fetchLeaderboard() async throws -> [LeaderboardUser] {
