@@ -63,7 +63,19 @@ class LeaderboardViewModel: ObservableObject {
         }
     }
     
-    func postStepCountUpdateForUser(username: String, count: Int) async throws {
-        try await DatabaseManager.shared.postStepCountUpdateForUser(leader: LeaderboardUser(username: username, count: 1876))
+    func postStepCountUpdateForUser(username: String) async throws {
+        guard let username = UserDefaults.standard.string(forKey: "username") else {
+            throw URLError(.badURL)
+        }
+        let steps = try await fetchCurrentWeekStepCount()
+        try await DatabaseManager.shared.postStepCountUpdateForUser(leader: LeaderboardUser(username: username, count: Int(steps)))
+    }
+    
+    private func fetchCurrentWeekStepCount() async throws -> Double {
+        try await withCheckedThrowingContinuation({
+            continuation in HealthManager.shared.fetchCurrentWeekStepCount {
+                result in continuation.resume(with: result)
+            }
+        })
     }
 }
