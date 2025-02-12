@@ -7,31 +7,10 @@
 
 import SwiftUI
 
-struct LeaderboardUser: Codable, Identifiable {
-    let id: Int
-    let createdAt: String
-    let username: String
-    let count: Int
-}
-
-class LeaderboardViewModel: ObservableObject {
-    var mockData = [
-        LeaderboardUser(id: 0, createdAt: "", username: "john", count: 2122),
-        LeaderboardUser(id: 1, createdAt: "", username: "seth", count: 4332),
-        LeaderboardUser(id: 2, createdAt: "", username: "drew", count: 3711),
-        LeaderboardUser(id: 3, createdAt: "", username: "mark", count: 6134),
-        LeaderboardUser(id: 4, createdAt: "", username: "pat", count: 1123),
-        LeaderboardUser(id: 5, createdAt: "", username: "paul", count: 2122),
-        LeaderboardUser(id: 6, createdAt: "", username: "sam", count: 4332),
-        LeaderboardUser(id: 7, createdAt: "", username: "elon", count: 3711),
-        LeaderboardUser(id: 8, createdAt: "", username: "garry", count: 6134),
-        LeaderboardUser(id: 9, createdAt: "", username: "peter", count: 1123)
-    ]
-}
-
 struct LeaderboardView: View {
     
-    @State var viewModel = LeaderboardViewModel()
+    @AppStorage("username") var username: String?
+    @StateObject var viewModel = LeaderboardViewModel()
     @Binding var showTerms: Bool
     
     var body: some View {
@@ -52,14 +31,32 @@ struct LeaderboardView: View {
             .padding()
             
             LazyVStack(spacing: 24) {
-                ForEach(viewModel.mockData) {
-                    person in HStack {
-                        Text("\(person.id).")
+                ForEach(Array(viewModel.leaderResult.top10.enumerated()), id: \.element.id) {
+                    ( idx, person ) in HStack {
+                        Text("\(idx + 1).")
                         Text(person.username)
+                        if username == person.username {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(.yellow)
+                        }
                         Spacer()
                         Text("\(person.count)")
                     }
                     .padding(.horizontal)
+                }
+            }
+            
+            if let user = viewModel.leaderResult.user {
+                Image(systemName: "ellipsis")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                    .foregroundColor(.gray.opacity(0.5))
+                
+                HStack {
+                    Text(user.username)
+                    Spacer()
+                    Text("\(user.count)")
                 }
             }
         }
