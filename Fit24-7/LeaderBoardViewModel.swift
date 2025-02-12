@@ -27,7 +27,7 @@ class LeaderboardViewModel: ObservableObject {
     init() {
         Task {
             do {
-                try await postStepCountUpdateForUser(username: "kevin", count: 1876)
+                try await postStepCountUpdateForUser(username: "kevin")
                 let result = try await fetchLeaderboard()
                 DispatchQueue.main.async {
                     self.leaderResult = result
@@ -64,6 +64,6 @@ class LeaderboardViewModel: ObservableObject {
     }
     
     func postStepCountUpdateForUser(username: String, count: Int) async throws {
-        try await DatabaseManager.shared.postStepCountUpdateForUser(leader: LeaderboardUser(username: username, count: count))
+        try await DatabaseManager.shared.postStepCountUpdateForUser(leader: LeaderboardUser(username: username, count: 1876))
     }
 }
