@@ -27,14 +27,18 @@ class LeaderboardViewModel: ObservableObject {
     init() {
         Task {
             do {
-                try await postStepCountUpdateForUser(username: "kevin")
-                let result = try await fetchLeaderboard()
-                DispatchQueue.main.async {
-                    self.leaderResult = result
-                }
+                try await setupLeaderboardData()
             } catch {
                 print(error.localizedDescription)
             }
+        }
+    }
+    
+    func setupLeaderboardData() async throws {
+        try await postStepCountUpdateForUser(username: "kevin")
+        let result = try await fetchLeaderboard()
+        DispatchQueue.main.async {
+            self.leaderResult = result
         }
     }
     
@@ -43,7 +47,7 @@ class LeaderboardViewModel: ObservableObject {
         let top10: [LeaderboardUser]
     }
     
-    func fetchLeaderboard() async throws -> LeaderboardResult {
+    private func fetchLeaderboard() async throws -> LeaderboardResult {
         let leaders = try await DatabaseManager.shared.fetchLeaderboard()
         let top10 = Array(leaders.sorted(by: {
             $0.count > $1.count
@@ -63,7 +67,7 @@ class LeaderboardViewModel: ObservableObject {
         }
     }
     
-    func postStepCountUpdateForUser(username: String) async throws {
+    private func postStepCountUpdateForUser(username: String) async throws {
         guard let username = UserDefaults.standard.string(forKey: "username") else {
             throw URLError(.badURL)
         }
