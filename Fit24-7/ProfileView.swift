@@ -28,6 +28,32 @@ struct ProfileView: View {
                         .font(.title)
                 }
             }
+            
+            VStack {
+                Button {
+                    
+                } label: {
+                    HStack {
+                        Image(systemName: "square.and.pencil")
+                        Text("Edit Name")
+                    }
+                    .foregroundColor(.primary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Button {
+                    
+                } label: {
+                    HStack {
+                        Image(systemName: "square.and.pencil")
+                        Text("Edit Image")
+                    }
+                    .foregroundColor(.primary)
+                }
+                .padding()
+            }
+            
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
