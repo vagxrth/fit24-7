@@ -30,28 +30,13 @@ struct ProfileView: View {
             }
             
             VStack {
-                Button {
-                    
-                } label: {
-                    HStack {
-                        Image(systemName: "square.and.pencil")
-                        Text("Edit Name")
-                    }
-                    .foregroundColor(.primary)
+                ProfileButtonView(title: "Edit Name", image: "square.and.pencil") {
+                    print("Edit Name")
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Button {
-                    
-                } label: {
-                    HStack {
-                        Image(systemName: "square.and.pencil")
-                        Text("Edit Image")
-                    }
-                    .foregroundColor(.primary)
+                ProfileButtonView(title: "Edit Image", image: "square.and.pencil") {
+                    print("Edit Image")
                 }
-                .padding()
             }
             
         }
