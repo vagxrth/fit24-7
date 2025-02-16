@@ -75,7 +75,10 @@ struct ProfileView: View {
                 )
                 
                 Button {
-                    isEditingImage = false
+                    withAnimation {
+                        profileImage = selectedImage
+                        isEditingImage = false
+                    }
                 } label: {
                     Text("Done")
                         .padding()
