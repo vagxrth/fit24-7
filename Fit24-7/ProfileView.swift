@@ -12,7 +12,9 @@ struct ProfileView: View {
     @AppStorage("profileView") var profileName: String?
     @AppStorage("profileImage") var profileImage: String?
     
-    @State private var isEditingImage = true
+    @State private var isEditingName = false
+    @State private var isEditingImage = false
+    @State private var currentName = ""
     @State private var selectedImage: String?
     
     @State private var images = ["bench", "machine", "press", "rowing", "weight"]
@@ -30,14 +32,46 @@ struct ProfileView: View {
                             .foregroundColor(.gray.opacity(0.25))
                     )
                     .onTapGesture {
-                        isEditingImage = true
+                        withAnimation {
+                            isEditingName = false
+                            isEditingImage = true
+                        }
                     }
                 VStack(alignment: .leading) {
-                    Text("Good Morning, ")
+                    Text("Good Morning!")
                         .font(.largeTitle)
                         .foregroundColor(.gray)
+                        .minimumScaleFactor(0.5)
                     Text(profileName ?? "Vagarth")
                         .font(.title)
+                }
+            }
+            
+            if isEditingName {
+                TextField("Your Name...", text: $currentName)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke()
+                    )
+                HStack {
+                    
+                    ProfileButtonEditView(title: "Cancel", backgroundColor: .gray.opacity(0.1)) {
+                        withAnimation {
+                            isEditingName = false
+                        }
+                    }
+                    .foregroundColor(.red)
+                    
+                    ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
+                        if !currentName.isEmpty {
+                            withAnimation {
+                                profileName = currentName
+                                isEditingName = false
+                            }
+                        }
+                    }
+                    .foregroundColor(.white)
                 }
             }
             
@@ -74,30 +108,29 @@ struct ProfileView: View {
                         .fill(.gray.opacity(0.15))
                 )
                 
-                Button {
+                ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
                     withAnimation {
                         profileImage = selectedImage
                         isEditingImage = false
                     }
-                } label: {
-                    Text("Done")
-                        .padding()
-                        .frame(maxWidth: 200)
-                        .foregroundColor(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(.primary)
-                        )
                 }
+                .foregroundColor(.white)
+                .padding(.bottom)
             }
             
             VStack {
                 ProfileButtonView(title: "Edit Name", image: "square.and.pencil") {
-                    print("Edit Name")
+                    withAnimation {
+                        isEditingImage = false
+                        isEditingName = true
+                    }
                 }
                 
                 ProfileButtonView(title: "Edit Image", image: "square.and.pencil") {
-                    isEditingImage = true
+                    withAnimation {
+                        isEditingName = false
+                        isEditingImage = true
+                    }
                 }
             }
             .background (
