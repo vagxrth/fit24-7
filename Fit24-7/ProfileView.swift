@@ -12,7 +12,7 @@ struct ProfileView: View {
     @AppStorage("profileView") var profileName: String?
     @AppStorage("profileImage") var profileImage: String?
     
-    @State private var isEditingName = true
+    @State private var isEditingName = false
     @State private var isEditingImage = false
     @State private var currentName = ""
     @State private var selectedImage: String?
@@ -52,35 +52,23 @@ struct ProfileView: View {
                             .stroke()
                     )
                 HStack {
-                    Button {
-                        isEditingName = false
-                    } label: {
-                        Text("Cancel")
-                            .padding()
-                            .frame(maxWidth: 200)
-                            .foregroundColor(.red)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.gray.opacity(0.1))
-                            )
+                    
+                    ProfileButtonEditView(title: "Cancel", backgroundColor: .gray.opacity(0.1)) {
+                        withAnimation {
+                            isEditingName = false
+                        }
                     }
-                    Button {
+                    .foregroundColor(.red)
+                    
+                    ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
                         if !currentName.isEmpty {
                             withAnimation {
                                 profileName = currentName
                                 isEditingName = false
                             }
                         }
-                    } label: {
-                        Text("Done")
-                            .padding()
-                            .frame(maxWidth: 200)
-                            .foregroundColor(.white)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.primary)
-                            )
                     }
+                    .foregroundColor(.white)
                 }
             }
             
@@ -117,21 +105,14 @@ struct ProfileView: View {
                         .fill(.gray.opacity(0.15))
                 )
                 
-                Button {
+                ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
                     withAnimation {
                         profileImage = selectedImage
                         isEditingImage = false
                     }
-                } label: {
-                    Text("Done")
-                        .padding()
-                        .frame(maxWidth: 200)
-                        .foregroundColor(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(.primary)
-                        )
                 }
+                .foregroundColor(.white)
+                .padding(.bottom)
             }
             
             VStack {
