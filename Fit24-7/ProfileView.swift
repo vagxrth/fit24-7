@@ -32,7 +32,10 @@ struct ProfileView: View {
                             .foregroundColor(.gray.opacity(0.25))
                     )
                     .onTapGesture {
-                        isEditingImage = true
+                        withAnimation {
+                            isEditingName = false
+                            isEditingImage = true
+                        }
                     }
                 VStack(alignment: .leading) {
                     Text("Good Morning!")
@@ -117,11 +120,17 @@ struct ProfileView: View {
             
             VStack {
                 ProfileButtonView(title: "Edit Name", image: "square.and.pencil") {
-                    isEditingName = true
+                    withAnimation {
+                        isEditingImage = false
+                        isEditingName = true
+                    }
                 }
                 
                 ProfileButtonView(title: "Edit Image", image: "square.and.pencil") {
-                    isEditingImage = true
+                    withAnimation {
+                        isEditingName = false
+                        isEditingImage = true
+                    }
                 }
             }
             .background (
