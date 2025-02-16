@@ -8,10 +8,19 @@
 import SwiftUI
 
 struct ProfileView: View {
+    
+    @AppStorage("profileView") var profileName: String?
+    @AppStorage("profileImage") var profileImage: String?
+    
+    @State private var isEditingImage = true
+    @State private var selectedImage: String?
+    
+    @State private var images = ["bench", "machine", "press", "rowing", "weight"]
+    
     var body: some View {
         VStack {
             HStack(spacing: 16) {
-                Image("machine")
+                Image(profileImage ?? "machine")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 100, height: 100)
@@ -20,12 +29,62 @@ struct ProfileView: View {
                         RoundedRectangle(cornerRadius: 10)
                             .foregroundColor(.gray.opacity(0.25))
                     )
+                    .onTapGesture {
+                        isEditingImage = true
+                    }
                 VStack(alignment: .leading) {
                     Text("Good Morning, ")
                         .font(.largeTitle)
                         .foregroundColor(.gray)
-                    Text("Vagarth")
+                    Text(profileName ?? "Vagarth")
                         .font(.title)
+                }
+            }
+            
+            if isEditingImage {
+                ScrollView(.horizontal) {
+                    HStack {
+                        ForEach(images, id: \.self) {
+                            image in Button {
+                                withAnimation {
+                                    selectedImage = image
+                                }
+                            } label: {
+                                VStack {
+                                    Image(image)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 100, height: 100)
+                                        .padding()
+                                    
+                                    if selectedImage == image {
+                                        Circle()
+                                            .frame(width: 16, height: 16)
+                                            .foregroundColor(.primary)
+                                    }
+                                    
+                                }
+                                .padding()
+                            }
+                        }
+                    }
+                }
+                .background (
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(.gray.opacity(0.15))
+                )
+                
+                Button {
+                    isEditingImage = false
+                } label: {
+                    Text("Done")
+                        .padding()
+                        .frame(maxWidth: 200)
+                        .foregroundColor(.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.primary)
+                        )
                 }
             }
             
@@ -35,7 +94,7 @@ struct ProfileView: View {
                 }
                 
                 ProfileButtonView(title: "Edit Image", image: "square.and.pencil") {
-                    print("Edit Image")
+                    isEditingImage = true
                 }
             }
             .background (
@@ -65,6 +124,9 @@ struct ProfileView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .onAppear {
+            selectedImage = profileImage
+        }
     }
 }
 
