@@ -18,7 +18,7 @@ struct ProfileView: View {
                     .padding(.all, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .foregroundColor(.gray.opacity(0.4))
+                            .foregroundColor(.gray.opacity(0.25))
                     )
                 VStack(alignment: .leading) {
                     Text("Good Morning, ")
@@ -38,6 +38,29 @@ struct ProfileView: View {
                     print("Edit Image")
                 }
             }
+            .background (
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.gray.opacity(0.15))
+            )
+            
+            
+            VStack {
+                ProfileButtonView(title: "Contact Us", image: "envelope") {
+                    print("Contact Us")
+                }
+                
+                ProfileButtonView(title: "Privacy Policy", image: "document") {
+                    print("Privacy Policy")
+                }
+                
+                ProfileButtonView(title: "Terms of Service", image: "rectangle.and.pencil.and.ellipsis") {
+                    print("Terms of Service")
+                }
+            }
+            .background (
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.gray.opacity(0.15))
+            )
             
         }
         .padding()
