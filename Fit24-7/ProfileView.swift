@@ -126,15 +126,27 @@ struct ProfileView: View {
             
             VStack {
                 ProfileButtonView(title: "Contact Us", image: "envelope") {
-                    print("Contact Us")
+                    viewModel.presentEmailApp()
                 }
                 
-                ProfileButtonView(title: "Privacy Policy", image: "document") {
-                    print("Privacy Policy")
+                Link(destination: URL(string: "https://github.com/vagxrth")!) {
+                    HStack {
+                        Image(systemName: "document")
+                        Text("Privacy Policy")
+                    }
+                    .foregroundColor(.primary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 
-                ProfileButtonView(title: "Terms of Service", image: "rectangle.and.pencil.and.ellipsis") {
-                    print("Terms of Service")
+                Link(destination: URL(string: "https://github.com/vagxrth")!) {
+                    HStack {
+                        Image(systemName: "rectangle.and.pencil.and.ellipsis")
+                        Text("Terms of Service")
+                    }
+                    .foregroundColor(.primary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .background (
