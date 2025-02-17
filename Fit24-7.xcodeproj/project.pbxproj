@@ -15,9 +15,22 @@
 		FB3AB14B2D55DF8A00D9C113 /* Fit24-7.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Fit24-7.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FB3AB28C2D63577900D9C113 /* Exceptions for "Fit24-7" folder in "Fit24-7" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FB3AB14A2D55DF8A00D9C113 /* Fit24-7 */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FB3AB14D2D55DF8A00D9C113 /* Fit24-7 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FB3AB28C2D63577900D9C113 /* Exceptions for "Fit24-7" folder in "Fit24-7" target */,
+			);
 			path = "Fit24-7";
 			sourceTree = "<group>";
 		};
@@ -267,6 +280,7 @@
 				DEVELOPMENT_TEAM = 6W44X8B23Q;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Fit24-7/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Fit24-7";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -297,6 +311,7 @@
 				DEVELOPMENT_TEAM = 6W44X8B23Q;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Fit24-7/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Fit24-7";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
