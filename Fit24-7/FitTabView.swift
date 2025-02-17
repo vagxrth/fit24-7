@@ -38,6 +38,11 @@ struct FitTabView: View {
                 .tabItem{
                     Image(systemName: "list.clipboard")
                 }
+            ProfileView()
+                .tag("Profile")
+                .tabItem{
+                    Image(systemName: "person")
+                }
         }
         .onAppear {
             showTerms = username == nil

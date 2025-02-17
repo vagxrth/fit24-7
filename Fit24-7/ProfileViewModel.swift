@@ -43,6 +43,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     func editImage() {
+        profileImage = selectedImage
         UserDefaults.standard.setValue(selectedImage, forKey: "profileImage")
         self.dismissEdit()
     }
