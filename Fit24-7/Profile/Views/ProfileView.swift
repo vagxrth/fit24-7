@@ -157,6 +157,11 @@ struct ProfileView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .alert("Oops!", isPresented: $viewModel.showAlert, actions: {
+            Text("Ok")
+        }, message: {
+            Text("Unable to open Mail application.")
+        })
     }
 }
 
