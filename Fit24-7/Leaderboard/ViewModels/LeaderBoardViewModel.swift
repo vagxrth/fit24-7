@@ -10,6 +10,8 @@ import Foundation
 class LeaderboardViewModel: ObservableObject {
     
     @Published var leaderResult = LeaderboardResult(user: nil, top10: [])
+    @Published var showAlert = false
+
     
     var mockData = [
         LeaderboardUser(username: "john", count: 2122),
@@ -24,21 +26,27 @@ class LeaderboardViewModel: ObservableObject {
         LeaderboardUser(username: "peter", count: 1123)
     ]
     
-    init() {
-        Task {
-            do {
-                try await setupLeaderboardData()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
+    enum LeaderboardViewModelError: Error {
+        case unableToFetchUsername
     }
     
-    func setupLeaderboardData() async throws {
-        try await postStepCountUpdateForUser(username: "kevin")
-        let result = try await fetchLeaderboard()
-        DispatchQueue.main.async {
-            self.leaderResult = result
+    init() {
+        setupLeaderboardData()
+    }
+    
+    func setupLeaderboardData() {
+        Task {
+            do {
+                try await postStepCountUpdateForUser(username: "kevin")
+                let result = try await fetchLeaderboard()
+                DispatchQueue.main.async {
+                    self.leaderResult = result
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showAlert = true
+                }
+            }
         }
     }
     
@@ -69,7 +77,7 @@ class LeaderboardViewModel: ObservableObject {
     
     private func postStepCountUpdateForUser(username: String) async throws {
         guard let username = UserDefaults.standard.string(forKey: "username") else {
-            throw URLError(.badURL)
+            throw LeaderboardViewModelError.unableToFetchUsername
         }
         let steps = try await fetchCurrentWeekStepCount()
         try await DatabaseManager.shared.postStepCountUpdateForUser(leader: LeaderboardUser(username: username, count: Int(steps)))
