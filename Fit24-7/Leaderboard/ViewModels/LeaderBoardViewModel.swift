@@ -39,11 +39,13 @@ class LeaderboardViewModel: ObservableObject {
             do {
                 try await postStepCountUpdateForUser(username: "kevin")
                 let result = try await fetchLeaderboard()
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     self.leaderResult = result
                 }
             } catch {
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     self.showAlert = true
                 }
             }
