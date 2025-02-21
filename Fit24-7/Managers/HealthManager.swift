@@ -27,7 +27,7 @@ class HealthManager {
         try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
     }
     
-    func fetchTodayCaloriesBurned(completion: @escaping(Result<Double, Error>) -> Void) {
+    func fetchCaloriesBurntToday(completion: @escaping(Result<Double, Error>) -> Void) {
         let calories = HKQuantityType(.activeEnergyBurned)
         let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
         let query = HKStatisticsQuery(quantityType: calories, quantitySamplePredicate: predicate) { _, results, error in
@@ -41,6 +41,19 @@ class HealthManager {
         }
             
         healthStore.execute(query)
+    }
+    
+    func fetchCaloriesToday() async throws -> Double {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchCaloriesBurntToday { result in
+                switch result {
+                case .success(let calories):
+                    continuation.resume(returning: calories)
+                case .failure(let failure):
+                    continuation.resume(throwing: failure)
+                }
+            }
+        })
     }
     
 }
