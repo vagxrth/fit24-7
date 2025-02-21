@@ -14,18 +14,34 @@ class HealthManager {
     private let healthStore = HKHealthStore()
     
     @MainActor
-        func requestHealthKitAccess() async throws {
-            let calories = HKQuantityType(.activeEnergyBurned)
-            let exercise = HKQuantityType(.appleExerciseTime)
-            let stand = HKCategoryType(.appleStandHour)
-            let steps = HKQuantityType(.stepCount)
-            let workouts = HKSampleType.workoutType()
-            let sleep = HKCategoryType(.sleepAnalysis) // Add sleep
-            let heartRate = HKQuantityType(.heartRate) // Add heart rate
+    func requestHealthKitAccess() async throws {
+        let calories = HKQuantityType(.activeEnergyBurned)
+        let exercise = HKQuantityType(.appleExerciseTime)
+        let stand = HKCategoryType(.appleStandHour)
+        let steps = HKQuantityType(.stepCount)
+        let workouts = HKSampleType.workoutType()
+        let sleep = HKCategoryType(.sleepAnalysis) // Add sleep
+        let heartRate = HKQuantityType(.heartRate) // Add heart rate
 
-            let healthTypes: Set = [calories, exercise, stand, steps, workouts, sleep, heartRate]
-            try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
+        let healthTypes: Set = [calories, exercise, stand, steps, workouts, sleep, heartRate]
+        try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
+    }
+    
+    func fetchTodayCaloriesBurned(completion: @escaping(Result<Double, Error>) -> Void) {
+        let calories = HKQuantityType(.activeEnergyBurned)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        let query = HKStatisticsQuery(quantityType: calories, quantitySamplePredicate: predicate) { _, results, error in
+            guard let quantity = results?.sumQuantity(), error == nil else {
+                completion(.failure(error!))
+                return
+            }
+                
+            let calorieCount = quantity.doubleValue(for: .kilocalorie())
+            completion(.success(calorieCount))
         }
+            
+        healthStore.execute(query)
+    }
     
 }
 
