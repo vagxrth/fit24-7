@@ -13,6 +13,20 @@ class HealthManager {
     static let shared = HealthManager()
     private let healthStore = HKHealthStore()
     
+    @MainActor
+        func requestHealthKitAccess() async throws {
+            let calories = HKQuantityType(.activeEnergyBurned)
+            let exercise = HKQuantityType(.appleExerciseTime)
+            let stand = HKCategoryType(.appleStandHour)
+            let steps = HKQuantityType(.stepCount)
+            let workouts = HKSampleType.workoutType()
+            let sleep = HKCategoryType(.sleepAnalysis) // Add sleep
+            let heartRate = HKQuantityType(.heartRate) // Add heart rate
+
+            let healthTypes: Set = [calories, exercise, stand, steps, workouts, sleep, heartRate]
+            try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
+        }
+    
 }
 
 // MARK: Leaderboard View
