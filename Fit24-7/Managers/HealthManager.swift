@@ -281,6 +281,33 @@ class HealthManager {
     }
 }
 
+// MARK: Charts View
+
+extension HealthManager {
+    func fetchDailySteps(startDate: Date, completion: @escaping (Result<[DailyStepModel], Error>) -> Void) {
+        let steps = HKQuantityType(.stepCount)
+        let interval = DateComponents(day: 1)
+        
+        let query = HKStatisticsCollectionQuery(quantityType: steps, quantitySamplePredicate: nil, anchorDate: startDate, intervalComponents: interval)
+        
+        // Method to query health data for each date of a given period
+        query.initialResultsHandler = { _, results, error in
+            guard let result = results, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+            
+            var dailySteps = [DailyStepModel]()
+            
+            result.enumerateStatistics(from: startDate, to: Date()) { statistics, stop in
+                dailySteps.append(DailyStepModel(date: statistics.startDate, count: Int(statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0)))
+            }
+            completion(.success(dailySteps))
+        }
+        healthStore.execute(query)
+    }
+}
+
 // MARK: Leaderboard View
 extension HealthManager {
     func fetchCurrentWeekStepCount(completion: @escaping (Result<Double, Error>) -> Void) {
