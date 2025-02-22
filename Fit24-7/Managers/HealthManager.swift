@@ -27,7 +27,7 @@ class HealthManager {
         try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
     }
     
-    func fetchCaloriesBurntToday(completion: @escaping(Result<Double, Error>) -> Void) {
+    func fetchTodayCaloriesBurnt(completion: @escaping(Result<Double, Error>) -> Void) {
         let calories = HKQuantityType(.activeEnergyBurned)
         let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
         let query = HKStatisticsQuery(quantityType: calories, quantitySamplePredicate: predicate) { _, results, error in
@@ -43,15 +43,63 @@ class HealthManager {
         healthStore.execute(query)
     }
     
-    func fetchCaloriesToday() async throws -> Double {
+    func fetchTodayCalories() async throws -> Double {
         try await withCheckedThrowingContinuation({ continuation in
-            fetchCaloriesBurntToday { result in
+            fetchTodayCaloriesBurnt { result in
                 switch result {
                 case .success(let calories):
                     continuation.resume(returning: calories)
                 case .failure(let failure):
                     continuation.resume(throwing: failure)
                 }
+            }
+        })
+    }
+    
+    func fetchTodayExerciseTime(completion: @escaping(Result<Double, Error>) -> Void) {
+        let exercise = HKQuantityType(.appleExerciseTime)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        let query = HKStatisticsQuery(quantityType: exercise, quantitySamplePredicate: predicate) { _, results, error in
+            guard let quantity = results?.sumQuantity(), error == nil else {
+                completion(.failure(error!))
+                return
+            }
+                
+            let exerciseTime = quantity.doubleValue(for: .minute())
+            completion(.success(exerciseTime))
+        }
+            
+        healthStore.execute(query)
+    }
+    
+    func fetchTodayExerciseTime() async throws -> Double {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchTodayExerciseTime { result in
+                continuation.resume(with: result)
+            }
+        })
+    }
+    
+    func fetchTodayStandHours(completion: @escaping(Result<Int, Error>) -> Void) {
+        let stand = HKCategoryType(.appleStandHour)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        let query = HKSampleQuery(sampleType: stand, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
+            guard let samples = results as? [HKCategorySample], error == nil else {
+                completion(.failure(error!))
+                return
+            }
+                
+            let standCount = samples.filter({ $0.value == 0 }).count
+            completion(.success(standCount))
+        }
+            
+        healthStore.execute(query)
+    }
+    
+    func fetchTodayStandHours() async throws -> Int {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchTodayStandHours { result in
+                continuation.resume(with: result)
             }
         })
     }
