@@ -306,6 +306,19 @@ extension HealthManager {
         }
         healthStore.execute(query)
     }
+    
+    func fetchOneWeekStepData() async throws -> [DailyStepModel] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchDailySteps(startDate: .oneWeekAgo) { result in
+                switch result {
+                case .success(let steps):
+                    continuation.resume(returning: steps)
+                case .failure(let failure):
+                    continuation.resume(throwing: failure)
+                }
+            }
+        })
+    }
 }
 
 // MARK: Leaderboard View
