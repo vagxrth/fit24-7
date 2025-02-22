@@ -8,8 +8,34 @@
 import Foundation
 import HealthKit
 
+protocol HealthManagerType {
+    func requestHealthKitAccess() async throws
+    func fetchTodayCaloriesBurned(completion: @escaping(Result<Double, Error>) -> Void)
+    func fetchTodayCalories() async throws -> Double
+    func fetchTodayExerciseTime(completion: @escaping(Result<Double, Error>) -> Void)
+    func fetchTodayExerciseTime() async throws -> Double
+    func fetchTodayStandHours(completion: @escaping(Result<Int, Error>) -> Void)
+    func fetchTodayStandHours() async throws -> Int
+    func fetchTodaySteps(completion: @escaping(Result<Activity, Error>) -> Void)
+    func fetchTodaySteps() async throws -> Activity
+    func fetchCurrentWeekWorkoutStats(completion: @escaping (Result<[Activity], Error>) -> Void)
+    func fetchCurrentWeekActivities() async throws -> [Activity]
+    func fetchWorkoutsForMonth(month: Date, completion: @escaping (Result<[Workout], Error>) -> Void)
+    func fetchRecentWorkouts() async throws -> [Workout]
+    func fetchDailySteps(startDate: Date, completion: @escaping (Result<[DailyStepModel], Error>) -> Void)
+    func fetchOneWeekStepData() async throws -> [DailyStepModel]
+    func fetchOneMonthStepData() async throws -> [DailyStepModel]
+    func fetchThreeMonthsStepData() async throws -> [DailyStepModel]
+    func fetchYTDAndOneYearChartData() async throws -> YearChartDataResult
+    func fetchYTDAndOneYearChartData(completion: @escaping (Result<YearChartDataResult, Error>) -> Void)
+    func fetchCurrentWeekStepCount(completion: @escaping (Result<Double, Error>) -> Void)
+    // Sleep
+    func fetchTodaySleepHours() async throws -> Double
+    // Heart Rate
+    func fetchLatestHeartRate() async throws -> Double
+}
 
-class HealthManager {
+final class HealthManager: HealthManagerType {
     
     static let shared = HealthManager()
     private let healthStore = HKHealthStore()
@@ -28,7 +54,7 @@ class HealthManager {
         try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
     }
     
-    func fetchTodayCaloriesBurnt(completion: @escaping(Result<Double, Error>) -> Void) {
+    func fetchTodayCaloriesBurned(completion: @escaping(Result<Double, Error>) -> Void) {
         let calories = HKQuantityType(.activeEnergyBurned)
         let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
         let query = HKStatisticsQuery(quantityType: calories, quantitySamplePredicate: predicate) { _, results, error in
@@ -46,7 +72,7 @@ class HealthManager {
     
     func fetchTodayCalories() async throws -> Double {
         try await withCheckedThrowingContinuation({ continuation in
-            fetchTodayCaloriesBurnt { result in
+            fetchTodayCaloriesBurned { result in
                 switch result {
                 case .success(let calories):
                     continuation.resume(returning: calories)
@@ -404,19 +430,19 @@ extension HealthManager {
 // MARK: Leaderboard View
 extension HealthManager {
     func fetchCurrentWeekStepCount(completion: @escaping (Result<Double, Error>) -> Void) {
-            let steps = HKQuantityType(.stepCount)
-            let predicate = HKQuery.predicateForSamples(withStart: .startOfWeek, end: Date())
-
-            let query = HKStatisticsQuery(quantityType: steps, quantitySamplePredicate: predicate) { _, results, error in
-                guard let quantity = results?.sumQuantity(), error == nil else {
-                    completion(.failure(error!))
-                    return
-                }
-                
-                let steps = quantity.doubleValue(for: .count())
-                completion(.success(steps))
+        let steps = HKQuantityType(.stepCount)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfWeek, end: Date())
+        
+        let query = HKStatisticsQuery(quantityType: steps, quantitySamplePredicate: predicate) { _, results, error in
+            guard let quantity = results?.sumQuantity(), error == nil else {
+                completion(.failure(error!))
+                return
             }
             
-            healthStore.execute(query)
+            let steps = quantity.doubleValue(for: .count())
+            completion(.success(steps))
         }
+        
+        healthStore.execute(query)
+    }
 }
