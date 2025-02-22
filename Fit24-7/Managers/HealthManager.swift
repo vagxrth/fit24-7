@@ -104,6 +104,154 @@ class HealthManager {
         })
     }
     
+    func fetchTodaySteps(completion: @escaping(Result<Activity, Error>) -> Void) {
+        let steps = HKQuantityType(.stepCount)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        let query = HKStatisticsQuery(quantityType: steps, quantitySamplePredicate: predicate) { _, results, error in
+            guard let quantity = results?.sumQuantity(), error == nil else {
+                completion(.success(Activity(title: "Today Steps", subtitle: "Goal: 800", image: "figure.walk", tintColor:.green, amount: "---")))
+                return
+            }
+            
+            let steps = quantity.doubleValue(for: .count())
+            let stepsGoal = UserDefaults.standard.value(forKey: "stepsGoal") ?? 7500
+            let activity = Activity(title: "Today Steps", subtitle: "Goal: \(stepsGoal)", image: "figure.walk", tintColor: .green, amount: steps.formattedNumberString())
+            completion(.success(activity))
+        }
+        
+        healthStore.execute(query)
+    }
+    
+    func fetchTodaySteps() async throws -> Activity {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchTodaySteps { result in
+                continuation.resume(with: result)
+            }
+        })
+    }
+    
+    func fetchTodaySleepHours() async throws -> Double {
+        let sleepType = HKCategoryType(.sleepAnalysis)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: sleepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                guard let samples = results as? [HKCategorySample] else {
+                    continuation.resume(returning: 0.0)
+                    return
+                }
+                
+                // Calculate total sleep time in hours
+                let totalSleep = samples.reduce(0.0) { total, sample in
+                    total + sample.endDate.timeIntervalSince(sample.startDate)
+                }
+                
+                continuation.resume(returning: totalSleep / 3600.0) // Convert seconds to hours
+            }
+            self.healthStore.execute(query)
+        }
+    }
+    
+    func checkHeartRate(_ heartRate: Double) {
+        let lowerBound = 50.0
+        let upperBound = 120.0
+        
+        if heartRate < lowerBound || heartRate > upperBound {
+            let condition = heartRate < lowerBound ? "too low (\(heartRate) BPM)" : "too high (\(heartRate) BPM)"
+            NotificationManager.shared.notifyHealthRisk(for: "an abnormal heart rate: \(condition).")
+        }
+    }
+    
+    func fetchLatestHeartRate() async throws -> Double {
+        let heartRateType = HKQuantityType(.heartRate)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: heartRateType, predicate: predicate, limit: 1, sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]) { _, results, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                guard let sample = results?.first as? HKQuantitySample else {
+                    continuation.resume(returning: 0.0)
+                    return
+                }
+                
+                let heartRate = sample.quantity.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
+                
+                // Check for abnormal heart rate and trigger a notification if needed
+                self.checkHeartRate(heartRate)
+                
+                continuation.resume(returning: heartRate)
+            }
+            self.healthStore.execute(query)
+        }
+    }
+    
+    private func generateActivitiesFromDurations(running: Int, strength: Int, soccer: Int, basketball: Int, stairs: Int, kickboxing: Int) -> [Activity] {
+        return [
+            Activity(title: "Running", subtitle: "This week", image: "figure.run", tintColor: .green, amount: "\(running) mins"),
+            Activity(title: "Strength Training", subtitle: "This week", image: "dumbbell", tintColor: .blue, amount: "\(strength) mins"),
+            Activity(title: "Soccer", subtitle: "This week", image: "figure.soccer", tintColor: .indigo, amount: "\(soccer) mins"),
+            Activity(title: "Basketball", subtitle: "This week", image: "figure.basketball", tintColor: .green, amount: "\(basketball) mins"),
+            Activity(title: "Stairstepper", subtitle: "This week", image: "figure.stairs", tintColor: .green, amount: "\(stairs) mins"),
+            Activity(title: "Kickboxing", subtitle: "This week", image: "figure.kickboxing", tintColor: .green, amount: "\(kickboxing) mins"),
+        ]
+    }
+    
+    func fetchCurrentWeekWorkoutStats(completion: @escaping (Result<[Activity], Error>) -> Void) {
+        let workouts = HKSampleType.workoutType()
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfWeek, end: Date())
+        let query = HKSampleQuery(sampleType: workouts, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { [weak self] _, results, error in
+            guard let workouts = results as? [HKWorkout], let self = self, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+            
+            // Only tracking acitivties we are interested in
+            var runningCount: Int = 0
+            var strengthCount: Int = 0
+            var soccerCount: Int = 0
+            var basketballCount: Int = 0
+            var stairsCount: Int = 0
+            var kickboxingCount: Int = 0
+            
+            for workout in workouts {
+                let duration = Int(workout.duration)/60
+                if workout.workoutActivityType == .running {
+                    runningCount += duration
+                } else if workout.workoutActivityType == .traditionalStrengthTraining {
+                    strengthCount += duration
+                } else if workout.workoutActivityType == .soccer {
+                    soccerCount += duration
+                } else if workout.workoutActivityType == .basketball {
+                    basketballCount += duration
+                } else if workout.workoutActivityType == .stairClimbing {
+                    stairsCount += duration
+                } else if workout.workoutActivityType == .kickboxing {
+                    kickboxingCount += duration
+                }
+            }
+            
+            completion(.success(self.generateActivitiesFromDurations(running: runningCount, strength: strengthCount, soccer: soccerCount, basketball: basketballCount, stairs: stairsCount, kickboxing: kickboxingCount)))
+        }
+        healthStore.execute(query)
+    }
+    
+    func fetchCurrentWeekActivities() async throws -> [Activity] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchCurrentWeekWorkoutStats { result in
+                continuation.resume(with: result)
+            }
+        })
+    }
+    
 }
 
 // MARK: Leaderboard View
