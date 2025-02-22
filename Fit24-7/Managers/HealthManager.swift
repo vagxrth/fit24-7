@@ -156,6 +156,46 @@ class HealthManager {
             self.healthStore.execute(query)
         }
     }
+    
+    func checkHeartRate(_ heartRate: Double) {
+        let lowerBound = 50.0
+        let upperBound = 120.0
+        
+        if heartRate < lowerBound || heartRate > upperBound {
+            let condition = heartRate < lowerBound ? "too low (\(heartRate) BPM)" : "too high (\(heartRate) BPM)"
+            NotificationManager.shared.notifyHealthRisk(for: "an abnormal heart rate: \(condition).")
+        }
+    }
+    
+    func fetchLatestHeartRate() async throws -> Double {
+        let heartRateType = HKQuantityType(.heartRate)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: heartRateType, predicate: predicate, limit: 1, sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]) { _, results, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                guard let sample = results?.first as? HKQuantitySample else {
+                    continuation.resume(returning: 0.0)
+                    return
+                }
+                
+                let heartRate = sample.quantity.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
+                
+                // Check for abnormal heart rate and trigger a notification if needed
+                self.checkHeartRate(heartRate)
+                
+                continuation.resume(returning: heartRate)
+            }
+            self.healthStore.execute(query)
+        }
+    }
+    
+    
+    
 }
 
 // MARK: Leaderboard View
