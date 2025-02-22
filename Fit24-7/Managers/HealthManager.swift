@@ -194,7 +194,63 @@ class HealthManager {
         }
     }
     
+    private func generateActivitiesFromDurations(running: Int, strength: Int, soccer: Int, basketball: Int, stairs: Int, kickboxing: Int) -> [Activity] {
+        return [
+            Activity(title: "Running", subtitle: "This week", image: "figure.run", tintColor: .green, amount: "\(running) mins"),
+            Activity(title: "Strength Training", subtitle: "This week", image: "dumbbell", tintColor: .blue, amount: "\(strength) mins"),
+            Activity(title: "Soccer", subtitle: "This week", image: "figure.soccer", tintColor: .indigo, amount: "\(soccer) mins"),
+            Activity(title: "Basketball", subtitle: "This week", image: "figure.basketball", tintColor: .green, amount: "\(basketball) mins"),
+            Activity(title: "Stairstepper", subtitle: "This week", image: "figure.stairs", tintColor: .green, amount: "\(stairs) mins"),
+            Activity(title: "Kickboxing", subtitle: "This week", image: "figure.kickboxing", tintColor: .green, amount: "\(kickboxing) mins"),
+        ]
+    }
     
+    func fetchCurrentWeekWorkoutStats(completion: @escaping (Result<[Activity], Error>) -> Void) {
+        let workouts = HKSampleType.workoutType()
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfWeek, end: Date())
+        let query = HKSampleQuery(sampleType: workouts, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { [weak self] _, results, error in
+            guard let workouts = results as? [HKWorkout], let self = self, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+            
+            // Only tracking acitivties we are interested in
+            var runningCount: Int = 0
+            var strengthCount: Int = 0
+            var soccerCount: Int = 0
+            var basketballCount: Int = 0
+            var stairsCount: Int = 0
+            var kickboxingCount: Int = 0
+            
+            for workout in workouts {
+                let duration = Int(workout.duration)/60
+                if workout.workoutActivityType == .running {
+                    runningCount += duration
+                } else if workout.workoutActivityType == .traditionalStrengthTraining {
+                    strengthCount += duration
+                } else if workout.workoutActivityType == .soccer {
+                    soccerCount += duration
+                } else if workout.workoutActivityType == .basketball {
+                    basketballCount += duration
+                } else if workout.workoutActivityType == .stairClimbing {
+                    stairsCount += duration
+                } else if workout.workoutActivityType == .kickboxing {
+                    kickboxingCount += duration
+                }
+            }
+            
+            completion(.success(self.generateActivitiesFromDurations(running: runningCount, strength: strengthCount, soccer: soccerCount, basketball: basketballCount, stairs: stairsCount, kickboxing: kickboxingCount)))
+        }
+        healthStore.execute(query)
+    }
+    
+    func fetchCurrentWeekActivities() async throws -> [Activity] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchCurrentWeekWorkoutStats { result in
+                continuation.resume(with: result)
+            }
+        })
+    }
     
 }
 
