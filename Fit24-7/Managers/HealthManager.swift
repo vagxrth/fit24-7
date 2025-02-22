@@ -129,6 +129,33 @@ class HealthManager {
             }
         })
     }
+    
+    func fetchTodaySleepHours() async throws -> Double {
+        let sleepType = HKCategoryType(.sleepAnalysis)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: sleepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                
+                guard let samples = results as? [HKCategorySample] else {
+                    continuation.resume(returning: 0.0)
+                    return
+                }
+                
+                // Calculate total sleep time in hours
+                let totalSleep = samples.reduce(0.0) { total, sample in
+                    total + sample.endDate.timeIntervalSince(sample.startDate)
+                }
+                
+                continuation.resume(returning: totalSleep / 3600.0) // Convert seconds to hours
+            }
+            self.healthStore.execute(query)
+        }
+    }
 }
 
 // MARK: Leaderboard View
