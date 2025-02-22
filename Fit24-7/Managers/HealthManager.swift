@@ -252,6 +252,33 @@ class HealthManager {
         })
     }
     
+    func fetchWorkoutsForMonth(month: Date, completion: @escaping (Result<[Workout], Error>) -> Void) {
+        let workouts = HKSampleType.workoutType()
+        let (startDate, endDate) = month.fetchMonthStartAndEndDate()
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
+        
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        
+        let query = HKSampleQuery(sampleType: workouts, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sortDescriptor]) { _, results, error in
+            guard let workouts = results as? [HKWorkout], error == nil else {
+                completion(.failure(error!))
+                return
+            }
+            
+            // Generates workout cards that will be displayed on home screen
+            let workoutsArray = workouts.map( { Workout(title: $0.workoutActivityType.name, image: $0.workoutActivityType.image, tintColor: $0.workoutActivityType.color, duration: "\(Int($0.duration)/60) mins", date: $0.startDate, calories: ($0.totalEnergyBurned?.doubleValue(for: .kilocalorie()).formattedNumberString() ?? "-") + " kcal") })
+            completion(.success(workoutsArray))
+        }
+        healthStore.execute(query)
+    }
+    
+    func fetchRecentWorkouts() async throws -> [Workout] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchWorkoutsForMonth(month: .now) { result in
+                continuation.resume(with: result)
+            }
+        })
+    }
 }
 
 // MARK: Leaderboard View
