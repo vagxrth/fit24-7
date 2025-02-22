@@ -8,6 +8,7 @@
 import Foundation
 import HealthKit
 
+
 class HealthManager {
     
     static let shared = HealthManager()
@@ -276,6 +277,125 @@ class HealthManager {
         try await withCheckedThrowingContinuation({ continuation in
             fetchWorkoutsForMonth(month: .now) { result in
                 continuation.resume(with: result)
+            }
+        })
+    }
+}
+
+// MARK: Charts View
+
+extension HealthManager {
+    func fetchDailySteps(startDate: Date, completion: @escaping (Result<[DailyStepModel], Error>) -> Void) {
+        let steps = HKQuantityType(.stepCount)
+        let interval = DateComponents(day: 1)
+        
+        let query = HKStatisticsCollectionQuery(quantityType: steps, quantitySamplePredicate: nil, anchorDate: startDate, intervalComponents: interval)
+        
+        // Method to query health data for each date of a given period
+        query.initialResultsHandler = { _, results, error in
+            guard let result = results, error == nil else {
+                completion(.failure(error!))
+                return
+            }
+            
+            var dailySteps = [DailyStepModel]()
+            
+            result.enumerateStatistics(from: startDate, to: Date()) { statistics, stop in
+                dailySteps.append(DailyStepModel(date: statistics.startDate, count: Int(statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0)))
+            }
+            completion(.success(dailySteps))
+        }
+        healthStore.execute(query)
+    }
+    
+    func fetchOneWeekStepData() async throws -> [DailyStepModel] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchDailySteps(startDate: .oneWeekAgo) { result in
+                switch result {
+                case .success(let steps):
+                    continuation.resume(returning: steps)
+                case .failure(let failure):
+                    continuation.resume(throwing: failure)
+                }
+            }
+        })
+    }
+    
+    func fetchOneMonthStepData() async throws -> [DailyStepModel] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchDailySteps(startDate: .oneMonthAgo) { result in
+                switch result {
+                case .success(let steps):
+                    continuation.resume(returning: steps)
+                case .failure(let failure):
+                    continuation.resume(throwing: failure)
+                }
+            }
+        })
+    }
+    
+    func fetchThreeMonthsStepData() async throws -> [DailyStepModel] {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchDailySteps(startDate: .threeMonthsAgo) { result in
+                switch result {
+                case .success(let steps):
+                    continuation.resume(returning: steps)
+                case .failure(let failure):
+                    continuation.resume(throwing: failure)
+                }
+            }
+        })
+    }
+    
+    func fetchYTDAndOneYearChartData(completion: @escaping (Result<YearChartDataResult, Error>) -> Void) {
+        
+        let steps = HKQuantityType(.stepCount)
+        let calendar = Calendar.current
+        
+        var oneYearMonths = [MonthlyStepModel]()
+        var ytdMonths = [MonthlyStepModel]()
+        // Note: Query is imbedded in a for loop to fetch data for previous 12 months
+        // Approach could be improved as running into an error for a given month will return failure/error for the entire call
+        for i in 0...11 {
+            let month = calendar.date(byAdding: .month, value: -i, to: Date()) ?? Date()
+            let (startOfMonth, endOfMonth) = month.fetchMonthStartAndEndDate()
+            let predicate = HKQuery.predicateForSamples(withStart: startOfMonth, end: endOfMonth)
+            let query = HKStatisticsQuery(quantityType: steps, quantitySamplePredicate: predicate) { _, results, error in
+                if let error = error, error.localizedDescription != "No data available for the specified predicate." {
+                    completion(.failure(error))
+                }
+                
+                let steps = results?.sumQuantity()?.doubleValue(for: .count()) ?? 0
+                
+                if i == 0 {
+                    oneYearMonths.append(MonthlyStepModel(date: month, count: Int(steps)))
+                    ytdMonths.append(MonthlyStepModel(date: month, count: Int(steps)))
+                } else {
+                    oneYearMonths.append(MonthlyStepModel(date: month, count: Int(steps)))
+                    if calendar.component(.year, from: Date()) == calendar.component(.year, from: month) {
+                        ytdMonths.append(MonthlyStepModel(date: month, count: Int(steps)))
+                    }
+                }
+                
+                // On last interation of the loop (last month), call completion success
+                if i == 11 {
+                    completion(.success(YearChartDataResult(ytd: ytdMonths, oneYear: oneYearMonths)))
+                }
+            }
+            healthStore.execute(query)
+        }
+    }
+    
+    func fetchYTDAndOneYearChartData() async throws -> YearChartDataResult {
+        try await requestHealthKitAccess()
+        return try await withCheckedThrowingContinuation({ continuation in
+            fetchYTDAndOneYearChartData { result in
+                switch result {
+                case .success(let res):
+                    continuation.resume(returning: res)
+                case .failure(let failure):
+                    continuation.resume(throwing: failure)
+                }
             }
         })
     }
