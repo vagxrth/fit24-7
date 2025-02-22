@@ -104,6 +104,31 @@ class HealthManager {
         })
     }
     
+    func fetchTodaySteps(completion: @escaping(Result<Activity, Error>) -> Void) {
+        let steps = HKQuantityType(.stepCount)
+        let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
+        let query = HKStatisticsQuery(quantityType: steps, quantitySamplePredicate: predicate) { _, results, error in
+            guard let quantity = results?.sumQuantity(), error == nil else {
+                completion(.success(Activity(title: "Today Steps", subtitle: "Goal: 800", image: "figure.walk", tintColor:.green, amount: "---")))
+                return
+            }
+            
+            let steps = quantity.doubleValue(for: .count())
+            let stepsGoal = UserDefaults.standard.value(forKey: "stepsGoal") ?? 7500
+            let activity = Activity(title: "Today Steps", subtitle: "Goal: \(stepsGoal)", image: "figure.walk", tintColor: .green, amount: steps.formattedNumberString())
+            completion(.success(activity))
+        }
+        
+        healthStore.execute(query)
+    }
+    
+    func fetchTodaySteps() async throws -> Activity {
+        try await withCheckedThrowingContinuation({ continuation in
+            fetchTodaySteps { result in
+                continuation.resume(with: result)
+            }
+        })
+    }
 }
 
 // MARK: Leaderboard View
