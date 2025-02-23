@@ -11,157 +11,162 @@ struct ProfileView: View {
     
     @StateObject var viewModel = ProfileViewModel()
     
+    @State private var email = ""
+    @State private var password = ""
+    
     var body: some View {
-        VStack {
-            HStack(spacing: 16) {
-                Image(viewModel.selectedImage ?? "machine")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .padding(.all, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .foregroundColor(.gray.opacity(0.25))
-                    )
-                    .onTapGesture {
-                        withAnimation {
-                            viewModel.presentEditImage()
-                        }
-                    }
+        NavigationStack {
+            ScrollView {
                 VStack(alignment: .leading) {
-                    Text("Good Morning!")
-                        .font(.largeTitle)
-                        .foregroundColor(.gray)
-                        .minimumScaleFactor(0.5)
-                    Text(viewModel.profileName ?? "Vagarth")
-                        .font(.title)
-                }
-            }
-            
-            if viewModel.isEditingName {
-                TextField("Your Name...", text: $viewModel.currentName)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke()
-                    )
-                HStack {
-                    
-                    ProfileButtonEditView(title: "Cancel", backgroundColor: .gray.opacity(0.1)) {
-                        withAnimation {
-                            viewModel.dismissEdit()
+                    HStack(spacing: 16) {
+                        Button {
+                            withAnimation {
+                                viewModel.presentEditImage()
+                            }
+                        } label: {
+                            Image(viewModel.profileImage ?? "machine")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .padding(8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .foregroundColor(.gray.opacity(0.25))
+                                )
+                        }
+                        VStack(alignment: .leading) {
+                            Text(Date.now.timeOfDayGreeting())
+                                .font(.title)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.4)
+                            
+                            Text(viewModel.profileName ?? "Name")
+                                .font(.title2)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.4)
                         }
                     }
-                    .foregroundColor(.red)
                     
-                    ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
-                        if !viewModel.currentName.isEmpty {
-                            viewModel.editName()
-                        }
-                    }
-                    .foregroundColor(.white)
-                }
-            }
-            
-            if viewModel.isEditingImage {
-                ScrollView(.horizontal) {
-                    HStack {
-                        ForEach(viewModel.images, id: \.self) {
-                            image in Button {
+                    if viewModel.isEditingName {
+                        TextField("Your Name...", text: $viewModel.currentName)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke()
+                            )
+                        HStack {
+                            ProfileButtonEditView(title: "Cancel", backgroundColor: .gray.opacity(0.1)) {
                                 withAnimation {
-                                    viewModel.selectNewImage(name: image)
+                                    viewModel.dismissEdit()
                                 }
-                            } label: {
-                                VStack {
-                                    Image(image)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 100, height: 100)
+                            }
+                            .foregroundColor(.red)
+                            
+                            ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
+                                viewModel.editName()
+                            }
+                            .foregroundColor(.white)
+                        }
+                    }
+                    
+                    if viewModel.isEditingImage {
+                        ScrollView(.horizontal) {
+                            HStack {
+                                ForEach(viewModel.images, id: \.self) {
+                                    image in Button {
+                                        withAnimation {
+                                            viewModel.selectNewImage(name: image)
+                                        }
+                                    } label: {
+                                        VStack {
+                                            Image(image)
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 100, height: 100)
+                                            
+                                            if viewModel.selectedImage == image {
+                                                Circle()
+                                                    .frame(width: 16, height: 16)
+                                                    .foregroundColor(.primary)
+                                            }
+                                            
+                                        }
                                         .padding()
-                                    
-                                    if viewModel.selectedImage == image {
-                                        Circle()
-                                            .frame(width: 16, height: 16)
-                                            .foregroundColor(.primary)
                                     }
-                                    
                                 }
-                                .padding()
+                            }
+                        }
+                        .background (
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.gray.opacity(0.15))
+                        )
+                        
+                        ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
+                            withAnimation {
+                                viewModel.editImage()
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .padding(.bottom)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    
+                    VStack {
+                        ProfileButtonView(title: "Edit Name", image: "square.and.pencil") {
+                            withAnimation {
+                                viewModel.presentEditName()
+                            }
+                        }
+                        
+                        ProfileButtonView(title: "Edit Image", image: "square.and.pencil") {
+                            withAnimation {
+                                viewModel.presentEditImage()
                             }
                         }
                     }
-                }
-                .background (
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(.gray.opacity(0.15))
-                )
-                
-                ProfileButtonEditView(title: "Done", backgroundColor: .blue) {
-                    withAnimation {
-                        viewModel.editImage()
+                    .background (
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.gray.opacity(0.15))
+                    )
+                    
+                    Toggle("Notifications", isOn: $viewModel.notificationsEnabled)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.gray.opacity(0.15))
+                        )
+                    
+                    
+                    VStack {
+                        ProfileButtonView(title: "Contact Us", image: "envelope") {
+                            viewModel.presentEmailApp()
+                        }
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.gray.opacity(0.15))
+                        )
                     }
-                }
-                .foregroundColor(.white)
-                .padding(.bottom)
-            }
-            
-            VStack {
-                ProfileButtonView(title: "Edit Name", image: "square.and.pencil") {
-                    withAnimation {
-                        viewModel.presentEditName()
-                    }
-                }
-                
-                ProfileButtonView(title: "Edit Image", image: "square.and.pencil") {
-                    withAnimation {
-                        viewModel.presentEditImage()
-                    }
-                }
-            }
-            .background (
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(.gray.opacity(0.15))
-            )
-            
-            
-            VStack {
-                ProfileButtonView(title: "Contact Us", image: "envelope") {
-                    viewModel.presentEmailApp()
-                }
-                
-                Link(destination: URL(string: "https://github.com/vagxrth")!) {
-                    HStack {
-                        Image(systemName: "document")
-                        Text("Privacy Policy")
-                    }
-                    .foregroundColor(.primary)
                     .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                
-                Link(destination: URL(string: "https://github.com/vagxrth")!) {
-                    HStack {
-                        Image(systemName: "rectangle.and.pencil.and.ellipsis")
-                        Text("Terms of Service")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .sheet(isPresented: $viewModel.presentGoal) {
+                        EditGoalsView()
+                            .presentationDetents([.fraction(0.55)])
+                            .environment(viewModel)
                     }
-                    .foregroundColor(.primary)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .alert("Oops", isPresented: $viewModel.showAlert) {
+                        Button(role: .cancel) {
+                            viewModel.showAlert = false
+                        } label: {
+                            Text("Ok")
+                        }
+                    } message: {
+                        Text("We were unable to open your mail application. Please make sure you have one installed.")
+                    }
                 }
+                .navigationTitle("Profile")
             }
-            .background (
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(.gray.opacity(0.15))
-            )
-            
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .alert("Oops!", isPresented: $viewModel.showAlert, actions: {
-            Text("Ok")
-        }, message: {
-            Text("Unable to open Mail application.")
-        })
     }
 }
 

@@ -29,7 +29,6 @@ struct ProfileButtonEditView: View {
 }
 
 #Preview {
-    ProfileButtonEditView(title: "Button", backgroundColor: .primary) {
-        
+    ProfileButtonEditView(title: "", backgroundColor: .primary) {
     }
 }
