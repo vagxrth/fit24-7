@@ -73,13 +73,6 @@ struct HomeView: View {
                 .navigationTitle(FitnessTabs.home.rawValue)
             }
         }
-        .alert("Oops", isPresented: $viewModel.showAlert) {
-            Button("Ok") {
-                viewModel.showAlert = false
-            }
-        } message: {
-            Text("Error Fetching Data!")
-        }
         .onAppear {
             viewModel.fetchGoalData()
         }

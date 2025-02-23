@@ -61,9 +61,7 @@ struct LeaderboardView: View {
                 }
                 .frame(maxHeight: .infinity, alignment: .top)
                 
-                if tabState.showTerms {
-                    Color.white
-                    
+                if tabState.showTerms {                    
                     TermsView()
                         .environmentObject(viewModel)
                         .environmentObject(tabState)
