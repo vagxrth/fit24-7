@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WorkoutCardView: View {
     
-    @State var workout: Workout
+    var workout: Workout
     
     var body: some View {
         HStack {
@@ -25,13 +25,15 @@ struct WorkoutCardView: View {
             VStack(spacing: 16) {
                 HStack {
                     Text(workout.title)
-                        .font(.title2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .font(.title3)
                         .bold()
                     Spacer()
                     Text(workout.duration)
                 }
                 HStack {
-                    Text(workout.date)
+                    Text(workout.date.formatWorkoutDate())
                     Spacer()
                     Text(workout.calories)
                 }
@@ -42,5 +44,5 @@ struct WorkoutCardView: View {
 }
 
 #Preview {
-    WorkoutCardView(workout: Workout(id: 0, title: "Running", image: "figure.run", tintColor: .green, duration: "23 mins", date: "Aug 3rd", calories: "341 Kcal"))
+    WorkoutCardView(workout: Workout(title: "Running", image: "figure.run", tintColor: .cyan, duration: "51 mins", date: Date(), calories: "512 kcal"))
 }
