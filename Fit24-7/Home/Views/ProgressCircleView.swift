@@ -10,7 +10,6 @@ import SwiftUI
 struct ProgressCircleView: View {
     
     @Binding var progress: Int
-    
     var goal: Int
     var color: Color
     private let width: CGFloat = 20
@@ -25,6 +24,7 @@ struct ProgressCircleView: View {
                 .rotationEffect(.degrees(-90))
                 .shadow(radius: 5)
         }
+        .padding()
     }
 }
 

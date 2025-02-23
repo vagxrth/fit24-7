@@ -9,119 +9,104 @@ import SwiftUI
 
 struct HomeView: View {
     
+    @EnvironmentObject var tabState: FitnessTabState
     @StateObject var viewModel = HomeViewModel()
     
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading) {
-                    Text("Welcome to Fit24-7")
-                        .font(.largeTitle)
-                        .padding()
                     HStack {
                         
                         Spacer()
                         
                         VStack(alignment: .leading) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Calories")
-                                    .font(.callout)
-                                    .bold()
-                                    .foregroundColor(.red)
-                                Text("\(viewModel.calories)")
-                                    .bold()
-                            }
-                            .padding(.bottom)
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Active")
-                                    .font(.callout)
-                                    .bold()
-                                    .foregroundColor(.green)
-                                Text("\(viewModel.active)")
-                                    .bold()
-                            }
-                            .padding(.bottom)
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Standing")
-                                    .font(.callout)
-                                    .bold()
-                                    .foregroundColor(.blue)
-                                Text("\(viewModel.standing)")
-                                    .bold()
-                            }
+                            MetricView(title: "Calories", value: viewModel.calories, color: .red)
+                            MetricView(title: "Active", value: viewModel.exercise, color: .green)
+                            MetricView(title: "Stand", value: viewModel.stand, color: .blue)
                         }
                         
                         Spacer()
                         
                         ZStack {
-                            ProgressCircleView(progress: $viewModel.calories, goal: 500, color: .red)
-                            ProgressCircleView(progress: $viewModel.active, goal: 120, color: .green)
+                            ProgressCircleView(progress: $viewModel.calories, goal: viewModel.caloriesGoal, color: .red)
+                            ProgressCircleView(progress: $viewModel.exercise, goal: viewModel.activeGoal, color: .green)
                                 .padding(.all, 20)
-                            ProgressCircleView(progress: $viewModel.standing, goal: 5, color: .blue)
-                                .padding(.all, 40)
+                            ProgressCircleView(progress: $viewModel.stand, goal: viewModel.standGoal, color: .blue)
+                                .padding(40)
                         }
                         .padding(.horizontal)
                         Spacer()
                     }
                     .padding()
                     
-                    HStack {
                         Text("Fitness Activity")
                             .font(.title2)
-                        
-                        Spacer ()
-                        
-                        Button {
-                            print("Show More")
-                        } label: {
-                            Text("Show More")
-                                .padding(.all, 10)
-                                .foregroundColor(.white)
-                                .background(.blue)
-                                .cornerRadius(20)
-                        }
-                    }
-                    .padding(.horizontal)
+                            .padding(.horizontal)
                     
-                    LazyVGrid(columns: Array(repeating: GridItem(spacing: 20), count: 2)) {
-                        ForEach(viewModel.mockActivityData, id: \.id) {
-                            activity in ActivityCardView(activity: activity)
-                        }
-                    }
-                    .padding(.horizontal)
                     
-                    HStack {
-                        Text("Recent Workouts")
-                            .font(.title2)
-                        
-                        Spacer ()
-                        
-                        NavigationLink {
-                            EmptyView()
-                        } label: {
-                            Text("Show More")
-                                .padding(.all, 10)
-                                .foregroundColor(.white)
-                                .background(.blue)
-                                .cornerRadius(20)
+                    if !viewModel.activities.isEmpty {
+                        LazyVGrid(columns: Array(repeating: GridItem(spacing: 20), count: 2)) {
+                            if let caloriesActivity = viewModel.activities.first(where: { $0.title == "Calories Burned" }) {
+                                ActivityCardView(activity: caloriesActivity)
+                            }
+                            
+                            if let sleepActivity = viewModel.activities.first(where: { $0.title == "Sleep" }) {
+                                ActivityCardView(activity: sleepActivity)
+                            }
+                            
+                            if let heartRateActivity = viewModel.activities.first(where: { $0.title == "Heart Rate" }) {
+                                ActivityCardView(activity: heartRateActivity)
+                            }
+                            
+                            ForEach(viewModel.activities.filter {
+                                $0.title != "Calories Burned" &&
+                                $0.title != "Sleep" &&
+                                $0.title != "Heart Rate"
+                            }, id: \.title) { activity in
+                                ActivityCardView(activity: activity)
+                            }
                         }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
-                    .padding(.top)
-                    
-                    LazyVStack {
-                        ForEach(viewModel.mockWorkoutData, id: \.id) {
-                            workout in WorkoutCardView(workout: workout)
-                        }
-                    }
-                    .padding(.bottom)
                 }
+                .navigationTitle(FitnessTabs.home.rawValue)
             }
         }
+        .alert("Oops", isPresented: $viewModel.showAlert) {
+            Button("Ok") {
+                viewModel.showAlert = false
+            }
+        } message: {
+            Text("Error Fetching Data!")
+        }
+        .onAppear {
+            viewModel.fetchGoalData()
+        }
+    }
+}
+
+// MARK: - Helper Views
+
+struct MetricView: View {
+    let title: String
+    let value: Int
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.callout)
+                .bold()
+                .foregroundColor(color)
+            Text("\(value)")
+                .bold()
+        }
+        .padding(.bottom)
     }
 }
 
 #Preview {
     HomeView()
+        .environmentObject(FitnessTabState())
 }

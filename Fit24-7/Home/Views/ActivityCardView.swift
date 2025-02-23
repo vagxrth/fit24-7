@@ -18,6 +18,8 @@ struct ActivityCardView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(activity.title)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
                         Text(activity.subtitle)
                             .font(.caption)
                     }
@@ -27,8 +29,8 @@ struct ActivityCardView: View {
                     Image(systemName: activity.image)
                         .foregroundColor(activity.tintColor)
                 }
-                Text(activity.data)
-                    .font(.title)
+                Text(activity.amount)
+                    .font(.title2)
                     .bold()
                     .padding()
             }
@@ -38,5 +40,5 @@ struct ActivityCardView: View {
 }
 
 #Preview {
-    ActivityCardView(activity: Activity(id: 0, title: "Today Steps", subtitle: "Goal 10,000", image: "figure.walk", tintColor: .green, data: "6,121"))
+    ActivityCardView(activity: Activity(title: "Today steps", subtitle: "Goal 12,000", image: "figure.walk", tintColor: .green, amount: "9,812"))
 }
