@@ -8,44 +8,45 @@
 import SwiftUI
 
 struct FitTabView: View {
-    @State var selectedTab = "Home"
-    @AppStorage("username") var username: String?
-    @State var showTerms = true
-
     
-    init() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.blue]
-        
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-    }
+    @StateObject private var tabState = FitnessTabState()
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $tabState.selectedTab) {
             HomeView()
-                .tag("Home")
-                .tabItem{
+                .tag(FitnessTabs.home)
+                .tabItem {
                     Image(systemName: "house")
+                    Text(FitnessTabs.home.rawValue)
                 }
             ChartsView()
-                .tag("Charts")
-                .tabItem{
+                .tag(FitnessTabs.charts)
+                .tabItem {
                     Image(systemName: "chart.line.uptrend.xyaxis")
+                    Text(FitnessTabs.charts.rawValue)
                 }
-            LeaderboardView(showTerms: $showTerms)
-                .tag("Leaderboard")
-                .tabItem{
-                    Image(systemName: "list.clipboard")
+            LeaderboardView()
+                .tag(FitnessTabs.leaderboard)
+                .tabItem {
+                    Image(systemName: "list.bullet")
+                    Text(FitnessTabs.leaderboard.rawValue)
                 }
             ProfileView()
-                .tag("Profile")
-                .tabItem{
+                .tag(FitnessTabs.profile)
+                .tabItem {
                     Image(systemName: "person")
+                    Text(FitnessTabs.profile.rawValue)
                 }
         }
-        .onAppear {
-            showTerms = username == nil
+        .environmentObject(tabState)
+        .task {
+            do {
+                try await HealthManager.shared.requestHealthKitAccess()
+            } catch {
+                DispatchQueue.main.async {
+                    presentAlert(title: "Oops", message: "Unable To Access Health Data!")
+                }
+            }
         }
     }
 }
