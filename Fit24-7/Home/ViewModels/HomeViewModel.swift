@@ -7,44 +7,71 @@
 
 import SwiftUI
 
-@Observable
+enum HealthError: Error {
+    case authorizationDenied
+    case dataFetchError
+    case unavailable
+}
+
+@MainActor
 final class HomeViewModel: ObservableObject {
     
-    var showAllActivities = false
+    @Published var showAllActivities = false
+    @Published var showAlert = false
+    @Published var errorMessage = ""
     
-    var calories: Int = 0
-    var exercise: Int = 0
-    var stand: Int = 0
-    var sleepHours: Double = 0.0
-    var heartRate: Double = 0.0
+    @Published var calories: Int = 0
+    @Published var exercise: Int = 0
+    @Published var stand: Int = 0
+    @Published var sleepHours: Double = 0.0
+    @Published var heartRate: Double = 0.0
     
-    var stepGoal: Int = UserDefaults.standard.value(forKey: "stepGoal") as? Int ?? 7500
-    var caloriesGoal: Int = UserDefaults.standard.value(forKey: "caloriesGoal") as? Int ?? 900
-    var activeGoal: Int = UserDefaults.standard.value(forKey: "activeGoal") as? Int ?? 60
-    var standGoal: Int = UserDefaults.standard.value(forKey: "standGoal") as? Int ?? 12
+    @Published var stepGoal: Int
+    @Published var caloriesGoal: Int
+    @Published var activeGoal: Int
+    @Published var standGoal: Int
     
-    var activities = [Activity]()
-    var workouts = [Workout]()
+    @Published var activities: [Activity] = []
+    @Published var workouts: [Workout] = []
     
-    var showAlert = false
     
-    var healthManager: HealthManagerType
+    private let healthManager: HealthManagerType
     
     init(healthManager: HealthManagerType = HealthManager.shared) {
         self.healthManager = healthManager
+        
+        // Initialize goals from UserDefaults
+        self.stepGoal = UserDefaults.standard.value(forKey: "stepGoal") as? Int ?? 7500
+        self.caloriesGoal = UserDefaults.standard.value(forKey: "caloriesGoal") as? Int ?? 900
+        self.activeGoal = UserDefaults.standard.value(forKey: "activeGoal") as? Int ?? 60
+        self.standGoal = UserDefaults.standard.value(forKey: "standGoal") as? Int ?? 12
+        
+        // Start data fetch
         Task {
-            do {
-                try await healthManager.requestHealthKitAccess()
-                try await fetchHealthData()
-            } catch {
-                await MainActor.run {
-                    showAlert = true
-                }
-            }
+            await setupHealthKit()
         }
     }
     
-    @MainActor
+    private func setupHealthKit() async {
+        do {
+            try await healthManager.requestHealthKitAccess()
+            try await fetchHealthData()
+        } catch let error as HealthError {
+            switch error {
+            case .authorizationDenied:
+                errorMessage = "Please enable Health access in Settings to view your fitness data."
+            case .dataFetchError:
+                errorMessage = "Unable to fetch your fitness data. Please try again."
+            case .unavailable:
+                errorMessage = "HealthKit is not available on this device."
+            }
+            showAlert = true
+        } catch {
+            errorMessage = "An unexpected error occurred. Please try again."
+            showAlert = true
+        }
+    }
+    
     func fetchHealthData() async throws {
         async let fetchCalories: () = try await fetchTodayCalories()
         async let fetchExercise: () = try await fetchTodayExerciseTime()
