@@ -25,6 +25,12 @@ struct FitTabView: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                     Text(FitnessTabs.charts.rawValue)
                 }
+            PlansView()
+                .tag(FitnessTabs.plans)
+                .tabItem {
+                    Image(systemName: "calendar")
+                    Text(FitnessTabs.plans.rawValue)
+                }
             LeaderboardView()
                 .tag(FitnessTabs.leaderboard)
                 .tabItem {
