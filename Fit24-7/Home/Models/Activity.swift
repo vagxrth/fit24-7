@@ -8,10 +8,9 @@
 import SwiftUI
 
 struct Activity {
-    let id: Int
     let title: String
     let subtitle: String
     let image: String
     let tintColor: Color
-    let data: String
+    let amount: String
 }
