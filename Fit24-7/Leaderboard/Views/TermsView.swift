@@ -9,64 +9,60 @@ import SwiftUI
 
 struct TermsView: View {
     
-    @State var name = ""
-    @AppStorage("username") var username: String?
-    @State var acceptedTerms = false
-    @Binding var showTerms: Bool
+    @EnvironmentObject var tabState: FitnessTabState
+    @EnvironmentObject var viewModel: LeaderboardViewModel
     
     var body: some View {
-        VStack {
-            Text("Leaderboard")
-                .font(.largeTitle)
-                .bold()
-            
-            Spacer()
-            
-            TextField("Username", text: $name)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke()
-                )
-            
-            HStack {
-                Button {
-                    withAnimation {
-                        acceptedTerms.toggle()
-                    }
-                } label: {
-                    if acceptedTerms {
-                        Image(systemName: "square.inset.filled")
-                    } else {
-                        Image(systemName: "square")
-                    }
-                }
-                
-                Text("Accept Terms & Conditions")
-                
-            }
-            
-            Spacer()
-            
-            Button {
-                if acceptedTerms && name.count > 2 {
-                    username = name
-                    showTerms = false
-                }
-            } label: {
-                Text("Continue")
-                    .foregroundColor(.white)
+        NavigationStack {
+            VStack {
+                Spacer()
+                TextField("Username", text: $viewModel.termsViewUsername)
                     .padding()
-                    .frame(maxWidth: .infinity)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
+                            .stroke()
                     )
+                
+                HStack(alignment: .top) {
+                    Button {
+                        withAnimation {
+                            viewModel.acceptedTerms.toggle()
+                        }
+                    } label: {
+                        Image(systemName: viewModel.acceptedTerms ? "square.inset.filled" : "square")
+                    }
+                    Text("By checking you agree to the Terms and Enter into the Leaderboard Competition.")
+
+                }
+                
+                Spacer()
+                
+                Button {
+                    withAnimation {
+                        viewModel.acceptedTermsAndSignedUp()
+                    }
+                } label: {
+                    Text("Continue")
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.blue))
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
+            .navigationTitle("Leaderboard")
+            .onChange(of: viewModel.didCompleteAccepting) { _, newValue in
+                if newValue {
+                    tabState.showTerms = false
+                }
             }
         }
-        .padding(.horizontal)
     }
 }
 
 #Preview {
-    TermsView(showTerms: .constant(true))
+    TermsView()
+        .environmentObject(FitnessTabState())
+        .environmentObject(LeaderboardViewModel())
 }
