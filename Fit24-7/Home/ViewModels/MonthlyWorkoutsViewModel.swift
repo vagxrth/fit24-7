@@ -8,7 +8,7 @@
 import Foundation
 
 @Observable
-final class MonthWorkoutsViewModel: ObservableObject {
+final class MonthlyWorkoutsViewModel: ObservableObject {
     var selectedMonth = 0
     var selectedDate = Date()
     var fetchedMonths: Set<String> = []

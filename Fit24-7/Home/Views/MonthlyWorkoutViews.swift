@@ -7,27 +7,9 @@
 
 import SwiftUI
 
-class MonthlyWorkoutViewModel: ObservableObject {
-    
-    @Published var selectedMonth = 0
-    @Published var selectedDate = Date()
-    
-    @Published var workouts = [Workout]()
-    @Published var currentMonthWorkouts = [
-        Workout(id: 0, title: "Running", image: "figure.run", tintColor: .green, duration: "23 mins", date: "Aug 3rd", calories: "341 Kcal"),
-        Workout(id: 0, title: "Running", image: "figure.run", tintColor: .green, duration: "23 mins", date: "Aug 3rd", calories: "341 Kcal"),
-        Workout(id: 0, title: "Running", image: "figure.run", tintColor: .green, duration: "23 mins", date: "Aug 3rd", calories: "341 Kcal")
-    ]
-    
-    func updateSelectedMonth() {
-        self.selectedDate = Calendar.current.date(byAdding: .month, value: selectedMonth, to: Date()) ?? Date()
-    }
-    
-}
-
 struct MonthlyWorkoutViews: View {
     
-    @StateObject var viewModel = MonthlyWorkoutViewModel()
+    @StateObject var viewModel = MonthlyWorkoutsViewModel()
     
     var body: some View {
         VStack {
@@ -44,6 +26,7 @@ struct MonthlyWorkoutViews: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 32, height: 32)
+                        .foregroundColor(.blue)
                 }
                 
                 Spacer()
@@ -63,6 +46,7 @@ struct MonthlyWorkoutViews: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 32, height: 32)
+                        .foregroundColor(.blue)
                         .opacity(viewModel.selectedMonth >= 0 ? 0.5 : 1)
                 }
                 .disabled(viewModel.selectedMonth >= 0)
@@ -78,9 +62,18 @@ struct MonthlyWorkoutViews: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding()
-        .onChange(of: viewModel.selectedMonth) {
-            _ in viewModel.updateSelectedMonth()
+        .padding(.vertical)
+        .onChange(of: viewModel.selectedMonth) { _, _ in
+            viewModel.updateSelectedDate()
+        }
+        .alert("Oops", isPresented: $viewModel.showAlert) {
+            Button(role: .cancel) {
+                viewModel.showAlert = false
+            } label: {
+                Text("Ok")
+            }
+        } message: {
+            Text("Unable To Load Workouts For \(viewModel.selectedDate.monthAndYearFormat()).")
         }
     }
 }
